@@ -15,7 +15,7 @@
       Dewell Guerand (84792200)
     ]
   },
-  margin: (top: 5%, x:10%, bottom: 5%),
+  margin: (top: 5%, x:5%, bottom: 5%),
   numbering: "1",
   number-align: center,
 )
@@ -84,6 +84,93 @@ $ D_("B")(P,Q) = -log(sum_(x in X) sqrt(P(x)Q(x))) $
 where $P(x)$ and $Q(x)$ are the probabilities of the event $x$ according to the distributions $P$ and $Q$, respectively.
 
 c) 
+To mesure the impact of the parameters $sigma , rho , beta$ on the distribution. We have made a function were we can observe the evolution of the system of lorenz by adjusting the paramters. 
+
+Influence of parameter $sigma$: 
+- *Small* : The system tend to have a more regular behaviour. After a certain value of $sigma$ the system start to have stable behaviour.
+
+- *Big* : The general behaviour of the system is chaotic. After a certain value of $sigma$ the system tend to have a special behaviour
+#grid(
+  columns: (1fr, 1fr),
+  rows: (auto),
+  gutter: -2em,
+  [
+    #figure(
+      image("small_sigma.png", width: 100%),
+      caption: [Small $sigma$]
+    )
+  ],
+  [
+    #figure(
+      image("sigma_grand.png", width: 100%),
+      caption: [Big $sigma$]
+    )
+  ]
+)
+
+
+
+Influence of parameter $rho$:
+- *Small* : 
+The system converge to a stable point. The system is not chaotic.
+- *Middle* : 
+The system is oscillating between two points. The system is not chaotic.
+
+- *Big* : 
+The system is chaotic. We can not predict the future position of the system.
+#grid(
+  columns: (1fr, 1fr , 1fr),
+  rows: (auto),
+  gutter: -2em,
+  [
+    #figure(
+      image("rho_small.png", width: 100%),
+      caption: [Small $rho$]
+    )
+  ],
+  [
+    #figure(
+      image("rho_mid.png", width: 100%),
+      caption: [Middle $rho$]
+    )
+  ],
+  [
+    #figure(
+      image("rho_big.png", width: 100%),
+      caption: [Big $rho$]
+    )
+  ]
+)
+
+
+Influence of parameter $beta$:
+- *Small* :
+The system tend to be less chaotic.
+- *Big* :
+The chaos can be amplified. The system is more chaotic.
+#grid(
+  columns: (1fr, 1fr),
+  rows: (auto),
+  gutter: -2em,
+  [
+    #figure(
+      image("betha_small.png", width: 100%),
+      caption: [Small $beta$ ]
+    )
+  ],
+  [
+    #figure(
+      image("betha_big.png", width: 100%),
+      caption: [Big $beta$ ]
+    )
+  ]
+)
+
+c) 
+
+If we mesure the distance between our empirical PDF and a new one calculated with different paramters ($sigma = 5 , rho = 20 , beta = 2$) we can see that the distance is not the same. The distance is bigger for the Kullback-Leibler divergence than for the Bhattacharyya distance. The Kullback-Leibler divergence is more sensitive to the difference between the two distributions. The Bhattacharyya distance is less sensitive to the difference between the two distributions.
+
+d) 
 
 
 

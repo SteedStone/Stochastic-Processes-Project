@@ -19,7 +19,10 @@ from scipy.integrate import odeint
 from mpl_toolkits.mplot3d import Axes3D
 from numpy import pi
 import random
-from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.animation as animation
+from matplotlib.widgets import Slider
+from scipy.stats import entropy, wasserstein_distance
+
 
 
 sigma = 10.0
@@ -194,8 +197,155 @@ def plot_2d_projections(boxes):
     plot_projection(xz_counts, "X", "Z", "Projection sur le plan XZ")
     plot_projection(yz_counts, "Y", "Z", "Projection sur le plan YZ")
 
+def dict_to_histogram(boxes, domain, box_length):
+    # Taille de la grille en 3D
+    x_bins = (domain[0][1] - domain[0][0]) // box_length
+    y_bins = (domain[1][1] - domain[1][0]) // box_length
+    z_bins = (domain[2][1] - domain[2][0]) // box_length
 
+    # Création d'un histogramme vide
+    hist = np.zeros((x_bins, y_bins, z_bins))
+
+    # Remplir l'histogramme avec les valeurs du dictionnaire
+    for ((x0, x1), (y0, y1), (z0, z1)), count in boxes.items():
+        i = int((x0 - domain[0][0]) / box_length)
+        j = int((y0 - domain[1][0]) / box_length)
+        k = int((z0 - domain[2][0]) / box_length)
+        hist[i, j, k] = count  # Mettre le nombre de points
+
+    return hist
+
+def normalize_pdf(hist):
+    return hist / np.sum(hist)
+
+def kl_divergence(P, Q):
+    P = P + 1e-10  # Évite log(0)
+    Q = Q + 1e-10
+    return 0.5 * (np.sum(P * np.log(P / Q)) + np.sum(Q * np.log(Q / P)))
+
+def bhattacharyya_distance(P, Q):
+    return -np.log(np.sum(np.sqrt(P * Q)))
+
+def compare_distributions(hist1, hist2):
+    """
+    Compare two distributions using KL divergence and Bhattacharyya distance.
+    """
+    hist1_normalized = normalize_pdf(hist1)
+    hist2_normalized = normalize_pdf(hist2)
+
+    kl_div = kl_divergence(hist1_normalized, hist2_normalized)
+    bhattacharyya_dist = bhattacharyya_distance(hist1_normalized, hist2_normalized)
+
+    return kl_div, bhattacharyya_dist
+
+def create_histogram(domain, box_length , sigma , rho , beta , state0 , t):
+    """
+    Create a histogram of the Lorenz system in the given domain with the specified box length.
+    """
+    # Create boxes
+    boxes = create_box(domain, box_length)
+
+    # Compute the Lorenz system
+    true_states = odeint(lorenz, state0, t, args=(sigma, rho, beta))
+
+    # Compute the number of points in each box
+    for i in range(len(states)):
+        x = true_states[i][0]
+        y = true_states[i][1]
+        z = true_states[i][2]
+        for b in boxes.keys():
+            if is_in_box(x, y, z, b):
+                boxes[b] += 1
+
+    # Convert dictionary to histogram
+    hist = dict_to_histogram(boxes, domain, box_length)
+
+    return hist
+
+
+def lorenz(state, t, sigma, rho, beta):
+        x, y, z = state
+        dxdt = sigma * (y - x)
+        dydt = x * (rho - z) - y
+        dzdt = x * y - beta * z
+        return [dxdt, dydt, dzdt]
+# Here we mdoifiy a bit the function to observe the effect of the parameters on the system
+# We will use the sliders to modify the parameters of the Lorenz system
+def plot_lorenz_with_sliders():
+    """
+    Plot the Lorenz attractor with sliders to modify the parameters.
+    """
+    
+
+    sigma, rho, beta = 10.0, 28.0, 8.0 / 3.0
+    state0 = [1.0, 1.0, 1.0]  
+    t = np.linspace(0, 50, 5000) 
+
+
+    fig = plt.figure(figsize=(16, 8))
+    ax3d = fig.add_subplot(221, projection='3d')  # Attracteur 3D
+    ax_xy = fig.add_subplot(222)  # Projection XY
+    ax_xz = fig.add_subplot(223)  # Projection XZ
+    ax_yz = fig.add_subplot(224)  # Projection YZ
+
+    # Fonction pour mettre à jour les graphes
+    def update_plot(val):
+        sigma = slider_sigma.val
+        rho = slider_rho.val
+        beta = slider_beta.val
+
+        # Résolution des EDOs avec les nouveaux paramètres
+        states = odeint(lorenz, state0, t, args=(sigma, rho, beta))
+        x, y, z = states[:, 0], states[:, 1], states[:, 2]
+
+        # Mise à jour des tracés
+        ax3d.clear()
+        ax3d.plot(x, y, z, color='blue', linewidth=0.5)
+        ax3d.set_title("Attracteur de Lorenz (3D)")
+        ax3d.set_xlabel("X")
+        ax3d.set_ylabel("Y")
+        ax3d.set_zlabel("Z")
+
+        ax_xy.clear()
+        ax_xy.plot(x, y, color='red', linewidth=0.5)
+        ax_xy.set_title("Projection XY")
+        ax_xy.set_xlabel("X")
+        ax_xy.set_ylabel("Y")
+
+        ax_xz.clear()
+        ax_xz.plot(x, z, color='green', linewidth=0.5)
+        ax_xz.set_title("Projection XZ")
+        ax_xz.set_xlabel("X")
+        ax_xz.set_ylabel("Z")
+
+        ax_yz.clear()
+        ax_yz.plot(y, z, color='purple', linewidth=0.5)
+        ax_yz.set_title("Projection YZ")
+        ax_yz.set_xlabel("Y")
+        ax_yz.set_ylabel("Z")
+
+        fig.canvas.draw_idle()
+
+    # Ajout des sliders pour modifier les paramètres
+    ax_slider_sigma = plt.axes([0.15, 0.01, 0.3, 0.02])
+    ax_slider_rho = plt.axes([0.55, 0.01, 0.3, 0.02])
+    ax_slider_beta = plt.axes([0.15, 0.04, 0.3, 0.02])
+
+    slider_sigma = Slider(ax_slider_sigma, 'Sigma', 0, 20, valinit=sigma)
+    slider_rho = Slider(ax_slider_rho, 'Rho', 0, 40, valinit=rho)
+    slider_beta = Slider(ax_slider_beta, 'Beta', 0, 3, valinit=beta)
+
+    # Mise à jour des tracés lorsque les sliders changent
+    slider_sigma.on_changed(update_plot)
+    slider_rho.on_changed(update_plot)
+    slider_beta.on_changed(update_plot)
+
+    # Première mise à jour
+    update_plot(None)
+
+    plt.show()
         
+# Main part of the code 
 # We will compute and increment the number of times a point is in a box of interval 5.
 # Pour stocker les boxs on va faire un grand dictionnaire et les box seront stockés sous forme de tuple ([x0 , x1], [y0 , y1], [z0 , z1])
 domain = ([-20, 20], [-30, 30], [0, 50])
@@ -210,12 +360,30 @@ for i in range(len(states)):
         if is_in_box(x, y, z, b):
             box[b] += 1
 
+#We verify that we have 5000 points 
 sum = 0
 for key in box.keys():
     sum += box[key]
 
-plot_2d_heatmaps(box, box_length)
-plot_3d_scatter(box)
+# a) 
+# plot_2d_heatmaps(box, box_length)
+# plot_3d_scatter(box)
+
+# c)
+plot_lorenz_with_sliders()
+hist1 = create_histogram(domain, box_length, sigma, rho, beta, state0, t)
+hist2 = create_histogram(domain, box_length, 5, 18, 8, state0, t)
+kl_div, bhattacharyya_dist = compare_distributions(hist1, hist2)
+print(f"KL Divergence: {kl_div}")
+print(f"Bhattacharyya Distance: {bhattacharyya_dist}")
+# d)
+state1 = [10.0, 10.0, 10.0]
+hist1 = create_histogram(domain, box_length, sigma, rho, beta, state0, t)
+hist1 = create_histogram(domain, box_length, sigma, rho, beta, state1, t)
+kl_div, bhattacharyya_dist = compare_distributions(hist1, hist2)
+print(f"KL Divergence: {kl_div}")
+print(f"Bhattacharyya Distance: {bhattacharyya_dist}")
+
 
 # fig = plt.figure()
 # plt.rcParams['font.family'] = 'serif'
