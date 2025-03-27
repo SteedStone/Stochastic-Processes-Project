@@ -64,6 +64,33 @@ The next step is computing in wich box is the point and increment the counter of
 We will then compute the empirical PDF by dividing the number of points in each box ($N_(i,j,k)$) by the total number of points ($N_("total")$) iid : 
 $ P_(i,j,k) = (N_(i,j,k)/N_("total")) $
 
+#grid(
+  columns: (1fr, 1fr, 1fr),
+  rows: (auto),
+  gutter: -2em,
+  [
+    #figure(
+      image("XY.png", width: 100%),
+      caption: [Plan XY]
+    )
+  ],
+  [
+    #figure(
+      image("XZ.png", width: 100%),
+      caption: [Plan XZ]
+    )
+  ],
+  [
+    #figure(
+      image("YZ.png", width: 100%),
+      caption: [Plan XY]
+    )
+  ]
+)
+
+What we can see is that there is a majority of point in the middle of the domain. 
+In the plan XY it's seems like we have a normal distribution. We can clearly observe the general shape of the system just by looking at the different plan. 
+
 b) 
 To mesure the distance between twee empirical PDF, we made the choice to mesure it by using the Kullback-Leibler divergence. The Kullback-Leibler divergence is a measure of how one probability distribution diverges from a second expected probability distribution. The Kullback-Leibler divergence is defined as follows #footnote[https://fr.wikipedia.org/wiki/Divergence_de_Kullback-Leibler] :
 
@@ -168,9 +195,46 @@ The chaos can be amplified. The system is more chaotic.
 
 c) 
 
-If we mesure the distance between our empirical PDF and a new one calculated with different paramters ($sigma = 5 , rho = 20 , beta = 2$) we can see that the distance is not the same. The distance is bigger for the Kullback-Leibler divergence than for the Bhattacharyya distance. The Kullback-Leibler divergence is more sensitive to the difference between the two distributions. The Bhattacharyya distance is less sensitive to the difference between the two distributions.
+If we mesure the distance between our empirical PDF and a new one calculated with different paramters ($sigma = 5 , rho = 20 , beta = 2$) we can see that the distances are not the same. In term of number we can see that the distance of KL divergence is $18.13$ and the distance of Bhattacharyya is $4.51$. The distance of KL divergence is bigger than the distance of Bhattacharyya.The distance of Bhattacharyya is smaller because she is not impacted as mush as the KL divergence by the presence of 0 in one distribution and not in the other one.As the twee distance are big with respect to the value that they can take, we can say that the two empirical PDF are not really close.
 
 d) 
+If we mesure the distance between our empiral PDF and the same one but with an other start point $((x_0 , y_0 ,z_0) = (10 , 10 , 10))$  The distance is bigger for the Kullback-Leibler divergence than for the Bhattacharyya distance. In term of number we have a distance of $0.896$ for the KL Divergence and a distance of $0.0448$ for the Bhattacharyya distance. As the twee distance are small with respect to the value that they can take, we can say that the two empirical PDF are really close.
+
+In conclusion for this part we can see that the initial state does not impact as mush as the paramter of the system. The distance between the two empirical PDF is smaller when we change the initial state than when we change the parameters of the system.
 
 
+
+== Particle Filter
+
+If we have a dynamic state space model : 
+
+#align(center ,
+$
+  cases(x_t = f(x_(t-1) , v_t) , 
+ y_t = g(x_t , w_t))$)
+
+where $x_t in RR ,y_t in RR $ and $v_t , w_t$ are the noise. Our goal is to estimate $x_t$ using observations $y_(1:t) = {y_1,y_2,...,y_t}$. Since we don't know exactly $p(x_(0:t)|y_(1:t))$, we are going to approximate it using a set of weighted samples. That bring some problems as over time, some particles have very low weights, while a few dominate. This leads to weight degeneracy, where most particles contribute very little to the estimate. To fix this, we perform resampling, which eliminates low-weight particles and duplicates high-weight ones.
+Here we are going to compare the performance of three type of resmapling based on there complexity and variance.
+- Multinomial Resampling :
+- Residual Resampling
+- Systematic Resampling
+
+#table(
+  columns: 3,
+  [*Type of sampling*], [*Variance*],[*Time*],
+  [Multinomial Resampling], [3.6303],[0.000070s] ,
+  [Residual Resampling], [3.1031],[0.000060s],
+  [Systematic Resampling], [3.0735],[0.000040s],
+  
+)
+By applying the three differents method of resampling we can see that the systematic resampling is clearly the best one in term of variance and time. 
+To compute these data we have used our sample from point 1.2. We can also plot the different repartion of the particles after resampling.
+#image(
+  "resampling.png",
+)
+
+It is much clear on a random set of weights : 
+#image(
+  "resampling_random.png",
+)
 
