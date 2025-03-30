@@ -47,8 +47,7 @@ $
  dot(z) = x y - beta z)$)
 
 where x, y and z stand for the position coordinates of the point in the system and σ, ρ and β
- are positive real parameters. Lorenz used the values σ = 10, ρ = 28 and β = 8
- 3 for which the
+ are positive real parameters. Lorenz used the values $sigma = 10$ , $rho = 28$ and $beta =  8/3$ for which the
  system shows a chaotic behaviour.
 
 ==  Empirical probability density function 
@@ -63,6 +62,8 @@ We will then start from the point $(x_0,y_0,z_0) = (1,1,1)$ and for each step of
 The next step is computing in wich box is the point and increment the counter of the box.
 We will then compute the empirical PDF by dividing the number of points in each box ($N_(i,j,k)$) by the total number of points ($N_("total")$) iid : 
 $ P_(i,j,k) = (N_(i,j,k)/N_("total")) $
+
+If we project the empirical PDF on the different plan we obtain the following result :
 
 #grid(
   columns: (1fr, 1fr, 1fr),
@@ -192,8 +193,7 @@ The chaos can be amplified. The system is more chaotic.
     )
   ]
 )
-
-c) 
+ 
 
 If we mesure the distance between our empirical PDF and a new one calculated with different paramters ($sigma = 5 , rho = 20 , beta = 2$) we can see that the distances are not the same. In term of number we can see that the distance of KL divergence is $18.13$ and the distance of Bhattacharyya is $4.51$. The distance of KL divergence is bigger than the distance of Bhattacharyya.The distance of Bhattacharyya is smaller because she is not impacted as mush as the KL divergence by the presence of 0 in one distribution and not in the other one.As the twee distance are big with respect to the value that they can take, we can say that the two empirical PDF are not really close.
 
@@ -214,10 +214,31 @@ $
  y_t = g(x_t , w_t))$)
 
 where $x_t in RR ,y_t in RR $ and $v_t , w_t$ are the noise. Our goal is to estimate $x_t$ using observations $y_(1:t) = {y_1,y_2,...,y_t}$. Since we don't know exactly $p(x_(0:t)|y_(1:t))$, we are going to approximate it using a set of weighted samples. That bring some problems as over time, some particles have very low weights, while a few dominate. This leads to weight degeneracy, where most particles contribute very little to the estimate. To fix this, we perform resampling, which eliminates low-weight particles and duplicates high-weight ones.
-Here we are going to compare the performance of three type of resmapling based on there complexity and variance.
+Here we are going to compare the performance of three type of resmapling based on there complexity and variance.We are then going to compute _var_($N_t^(i)$)
 - Multinomial Resampling :
-- Residual Resampling
-- Systematic Resampling
+As the $N_t^(i)$ are computed from a multinomial distribution with paramters $N$ and $tilde(w)_t^(i)$ we have directly that the variance is given by : _var_($N_t^(i)$) = $N * tilde(w)_t^(i) * (1 - tilde(w)_t^(i))$.
+- Residual Resampling : 
+The first syep is to compute the deterministic part, so for each particle $i$, we are going to compute a integer $tilde(N)_t^(i) = floor(N tilde(w)_t^(i))$.
+By doing this we ensure that particle with a high weight gets a certain number of copies without any randomness.
+After having computed the deterministic part, there are still $overline(N)_t = N - sum_(i=1)^N tilde(N)_t^(i)$ particles that don't have a weight. 
+For these particles we are going to apply a procedure called SIR (Sampling Importance Resampling) wich give us the following new weights : $w_t^('(i)) = overline(N)^(-1)_t (tilde(w)_t^((i)) N - tilde(N)_i)$
+The total number $N_t$ is then given by the sum of the deterministic part and the random part. 
+As the deterministic part is deterministic, we have that the variance of the deterministic part is 0.
+The variance is then given by the variance of the random part which is given by : _var_$(N_t^((i))) = overline(N)_t w_t^('(i)) (1 - w_t^('(i)))$
+By doing some more computation we can see that the variance is smaller than the one of the multinomial resampling.
+- Systematic Resampling :
+If we define the cumulative sequence :
+$ C_i = sum_(j=1)^i tilde(w)_t^((j))$ with $C_0 = 0$ and $C_M = 1$.
+We have that the cumulative sums partition the interval $[0,1]$ into M subintervals: 
+$(C_0,C_1],(C_1,C_2],...,(C_(M-1),C_M]$. Each of these interval have a length of $tilde(w)_t^((i))$.
+As we sample a set $U = {u_1 ,u_2,...,u_N}$ of N points in $[0,1]$, if we count the number of points $N_t^((i))$ iid : $N_t^((i)) = "#"{u_k in U : C_(i-1) < u_k <= C_i}$
+In a pure multinomial resampling scheme, the variance in the number of offspring $N_t^((i))$ would be : 
+_var_$(N_t^((i))) = N * tilde(w)_t^((i)) (1 - tilde(w)_t^((i)))$.
+
+However, because systematic or stratified sampling forces an even spread of points, the variance is further reduced. For this strategy, the variance becomes
+_var_$(N_t^((i))) = overline(N)_t w_t^('(i)) (1 - overline(N)_t w_t^('(i)))$.
+
+
 
 #table(
   columns: 3,
