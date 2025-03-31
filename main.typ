@@ -221,11 +221,14 @@ As the $N_t^(i)$ are computed from a multinomial distribution with paramters $N$
 The first syep is to compute the deterministic part, so for each particle $i$, we are going to compute a integer $tilde(N)_t^(i) = floor(N tilde(w)_t^(i))$.
 By doing this we ensure that particle with a high weight gets a certain number of copies without any randomness.
 After having computed the deterministic part, there are still $overline(N)_t = N - sum_(i=1)^N tilde(N)_t^(i)$ particles that don't have a weight. 
-For these particles we are going to apply a procedure called SIR (Sampling Importance Resampling) wich give us the following new weights : $w_t^('(i)) = overline(N)^(-1)_t (tilde(w)_t^((i)) N - tilde(N)_i)$
+For these particles we are going to apply a procedure called SIR (Sampling Importance Resampling) wich give us the following new weights : $w_t^('(i)) = overline(N)^(-1)_t (tilde(w)_t^((i)) N - tilde(N)_t^(i))$
 The total number $N_t$ is then given by the sum of the deterministic part and the random part. 
 As the deterministic part is deterministic, we have that the variance of the deterministic part is 0.
 The variance is then given by the variance of the random part which is given by : _var_$(N_t^((i))) = overline(N)_t w_t^('(i)) (1 - w_t^('(i)))$
-By doing some more computation we can see that the variance is smaller than the one of the multinomial resampling.
+By doing some more computation we can see that the variance is smaller than the one of the multinomial resampling : As _var_$(N_t^((i))) = overline(N)_t w_t^('(i)) (1 - w_t^('(i))) = overline(N)_t overline(N)^(-1)_t (tilde(w)_t^((i)) N - tilde(N)_t^(t)) (1 - overline(N)^(-1)_t (tilde(w)_t^((i)) N - tilde(N)_t^(i)))$.
+
+If we compare to the multinomial resampling. 
+The term $tilde(w)_t^((i)) N - tilde(N)_i$ is smaller than $N * tilde(w)_t^((i))$ because we remove $tilde(N_t^(i))$. The part $1 - overline(N)^(-1)_t (tilde(w)_t^((i)) N - tilde(N)^(i)_t)$ is also smaller than $1 - tilde(w)_t^((i))$ because we remove $tilde(N_t^(i))$ and we divide by $overline(N)_t^(i)$. So we can conclude that the variance of the residual resampling is smaller than the one of the multinomial resampling.
 - Systematic Resampling :
 If we define the cumulative sequence :
 $ C_i = sum_(j=1)^i tilde(w)_t^((j))$ with $C_0 = 0$ and $C_M = 1$.
@@ -237,6 +240,8 @@ _var_$(N_t^((i))) = N * tilde(w)_t^((i)) (1 - tilde(w)_t^((i)))$.
 
 However, because systematic or stratified sampling forces an even spread of points, the variance is further reduced. For this strategy, the variance becomes
 _var_$(N_t^((i))) = overline(N)_t w_t^('(i)) (1 - overline(N)_t w_t^('(i)))$.
+
+As we can see it is smaller than the one of the Systematic resampling as we substract $overline(N)_t w_t^('(i))$ wich is greater than $tilde(w)_t^('(i))$.
 
 
 
